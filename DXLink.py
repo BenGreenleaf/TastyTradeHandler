@@ -7,6 +7,7 @@ class DXLink:
     auth_token: str = None
     auth_state: str = None
     user_id: str = None
+    retrieved_data: dict = {}
 
     def __init__(self, uri: str = None, auth_token: str = None) -> None:
         self.uri = uri
@@ -31,7 +32,6 @@ class DXLink:
 
     def on_message(self, ws, message):
         message = json.loads(message)
-        print(f"got {message}")
         match message["type"]:
             case "SETUP":
                 self.send({"type": "AUTH", "token": self.auth_token})
@@ -49,8 +49,25 @@ class DXLink:
                     )
             case "KEEPALIVE":
                 self.send({"type": "KEEPALIVE"})
+                print(self.retrieved_data)
+            case "FEED_DATA":
+                try:
+                    data = message['data']
+                    for d in data:
+                        if type(d) == list:
+                            symbol = d[1]
+                            askPrice = float(d[2])
+                            bidPrice = float(d[3])
+                            askSize = float(d[4])
+                            bidSize = float(d[5])
+
+                            self.retrieved_data[symbol] = {'ask_price':askPrice, 'bid_price':bidPrice, 'ask_size':askSize, 'bid_size':bidSize}
+
+                            #print(symbol, askPrice, bidPrice, askSize, bidSize)
+                except Exception as e:
+                    print(message, e)
             case _:
-                print(f"dxlink get {message}")
+                print(message)
 
     def on_error(self, ws, error):
         print(f"dxlink error {error}")
@@ -89,3 +106,21 @@ class DXLink:
         if not "userId" in data and self.user_id is not None:
             data["userId"] = self.user_id
         self.socket.send(json.dumps(data))
+
+    def profitFinder(self):
+
+        for symbol in list(self.retrieved_data.keys()):
+            if len(symbol) < 6:
+                #Not An Option
+                underlyingAsk = self.retrieved_data[symbol]['ask_price']
+                underlyingBid = self.retrieved_data[symbol]['bid_price']
+                for optionSymbol in list(self.retrieved_data.keys()):
+                    strike = int(optionSymbol.split("P")[1]) #Potential Issue if Strike is not Integer
+                    if symbol in optionSymbol and optionSymbol != symbol:
+                        ask = self.retrieved_data[optionSymbol]['ask_price']
+
+                        #loss = strike
+
+
+
+

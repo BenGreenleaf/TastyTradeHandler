@@ -12,7 +12,7 @@ class TTConfig:
     cert_wss: str = None
     prod_wss: str = None
 
-    def __init__(self, path: str = "D:/Greenleaf & Bowker/Tasty Trade", filename: str = "tt.config") -> None:
+    def __init__(self, path: str = "C:/Users/benyb/OneDrive/Documents/G&B/TTHandler", filename: str = "tt.config") -> None:
         filename = f"{path}/{filename}"
         self.config.read(filename)
         self.use_prod = self.config.get("Config", "use_prod") in (
